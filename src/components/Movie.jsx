@@ -3,6 +3,14 @@ import starredSlice from '../data/starredSlice'
 import watchLaterSlice from '../data/watchLaterSlice'
 import placeholder from '../assets/not-found-500X750.jpeg'
 
+export const myClickHandler = (e) => {
+    if (e === null || e === undefined){
+        return e = { cancelBubble: true}
+    }if (e.stopPropagation) e.stopPropagation()
+    e.target.parentElement.parentElement.classList.remove('opened')
+}
+
+
 const Movie = ({ movie, viewTrailer, closeCard }) => {
 
     const state = useSelector((state) => state)
@@ -12,15 +20,10 @@ const Movie = ({ movie, viewTrailer, closeCard }) => {
 
     const dispatch = useDispatch()
 
-    const myClickHandler = (e) => {
-        if (!e) var e = window.event
-        e.cancelBubble = true
-        if (e.stopPropagation) e.stopPropagation()
-        e.target.parentElement.parentElement.classList.remove('opened')
-    }
+    
 
     return (
-        <div className="wrapper col-3 col-sm-4 col-md-3 col-lg-3 col-xl-2">
+        <div className="wrapper">
         <div className="card" onClick={(e) => e.currentTarget.classList.add('opened')} >
             <div className="card-body text-center">
                 <div className="overlay" />
@@ -45,25 +48,22 @@ const Movie = ({ movie, viewTrailer, closeCard }) => {
                         </span>
                     )}
                     {!watchLater.watchLaterMovies.map(movie => movie.id).includes(movie.id) ? (
-                        <button type="button" data-testid="watch-later" className="btn btn-light btn-watch-later" onClick={() => dispatch(addToWatchLater({
+                        <span data-testid="watch-later" className="btn btn-light btn-watch-later" onClick={() => dispatch(addToWatchLater({
                                 id: movie.id, 
                                 overview: movie.overview, 
                                 release_date: movie.release_date?.substring(0, 4),
                                 poster_path: movie.poster_path,
                                 title: movie.title
-                        }))}>Watch Later</button>
+                        }))}>Watch Later</span>
                     ) : (
-                        <button type="button" data-testid="remove-watch-later" className="btn btn-light btn-watch-later blue" onClick={() => dispatch(removeFromWatchLater(movie))}><i className="bi bi-check"></i></button>
+                        <span data-testid="remove-watch-later" className="btn btn-light btn-watch-later blue" onClick={() => dispatch(removeFromWatchLater(movie))}><i className="bi bi-check"></i></span>
                     )}
-                    <button type="button" className="btn btn-dark" onClick={() => viewTrailer(movie)}>View Trailer</button>                                                
+                    <button type="button" data-testid="watch-trailer" className="btn btn-dark btn-watch-trailer" onClick={() => viewTrailer(movie)}>View Trailer</button>                                                
                 </div>
                 <img className="center-block" src={(movie.poster_path) ? `https://image.tmdb.org/t/p/w500/${movie.poster_path}` : placeholder} alt="Movie poster" />
             </div>
             <h6 className="title mobile-card">{movie.title}</h6>
             <h6 className="title">{movie.title}</h6>
-            <button type="button" className="close" onClick={(e) => myClickHandler(e)} aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
         </div>
     </div>        
     )

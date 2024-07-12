@@ -3,18 +3,21 @@ import { Routes, Route, createSearchParams, useSearchParams, useNavigate } from 
 import { useDispatch, useSelector } from 'react-redux'
 import 'reactjs-popup/dist/index.css'
 import { fetchMovies } from './data/moviesSlice'
-import { ENDPOINT_SEARCH, ENDPOINT_DISCOVER, ENDPOINT, API_KEY } from './constants'
+import { ENDPOINT_SEARCH, ENDPOINT_DISCOVER, ENDPOINT, API_KEY,NOTRAILERERROR } from './constants'
 import Header from './components/Header'
 import Movies from './components/Movies'
 import Starred from './components/Starred'
 import WatchLater from './components/WatchLater'
 import YouTubePlayer from './components/YoutubePlayer'
 import './app.scss'
+import Modal from 'react-modal'
+import ScrollComponent from './components/ScrollComponent'
+
+Modal.setAppElement('body');
 
 const App = () => {
 
-  const state = useSelector((state) => state)
-  const { movies } = state  
+  const { movies, fetchStatus} = useSelector((state) => state.movies);
   const dispatch = useDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
   const searchQuery = searchParams.get('search')
@@ -25,15 +28,17 @@ const App = () => {
   const closeModal = () => setOpen(false)
   
   const closeCard = () => {
-
   }
 
   const getSearchResults = (query) => {
+    const endpoint = query !== '' ? `${ENDPOINT_SEARCH}&query=`+query : ENDPOINT_DISCOVER;
+    let operation = 'search';
     if (query !== '') {
-      dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=`+query))
+      dispatch(fetchMovies({endpoint, operation}))
       setSearchParams(createSearchParams({ search: query }))
     } else {
-      dispatch(fetchMovies(ENDPOINT_DISCOVER))
+      operation = 'initlisting';
+      dispatch(fetchMovies({endpoint, operation}))
       setSearchParams()
     }
   }
@@ -44,16 +49,17 @@ const App = () => {
   }
 
   const getMovies = () => {
+    const endpoint = searchQuery !== null ? `${ENDPOINT_SEARCH}&query=`+searchQuery : ENDPOINT_DISCOVER;
+    const operation = 'initlisting';
     if (searchQuery) {
-        dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=`+searchQuery))
+        dispatch(fetchMovies({endpoint,operation}))
     } else {
-        dispatch(fetchMovies(ENDPOINT_DISCOVER))
+        dispatch(fetchMovies({endpoint, operation}))
     }
   }
 
   const viewTrailer = (movie) => {
     getMovie(movie.id)
-    if (!videoKey) setOpen(true)
     setOpen(true)
   }
 
@@ -64,31 +70,32 @@ const App = () => {
     const videoData = await fetch(URL)
       .then((response) => response.json())
 
-    if (videoData.videos && videoData.videos.results.length) {
+    if(videoData.videos && videoData.videos.results.length){
       const trailer = videoData.videos.results.find(vid => vid.type === 'Trailer')
       setVideoKey(trailer ? trailer.key : videoData.videos.results[0].key)
+    }else{
+      setVideoKey(NOTRAILERERROR)
     }
   }
 
   useEffect(() => {
     getMovies()
-  }, [])
+  }, []);
 
   return (
     <div className="App">
-      <Header searchMovies={searchMovies} searchParams={searchParams} setSearchParams={setSearchParams} />
-
+      <Header searchMovies={searchMovies} searchQuery={searchQuery}/>
       <div className="container">
-        {videoKey ? (
+        {videoKey && isOpen ? (
           <YouTubePlayer
+            closeModal={closeModal}
             videoKey={videoKey}
+            isOpen={isOpen}
           />
-        ) : (
-          <div style={{padding: "30px"}}><h6>no trailer available. Try another movie</h6></div>
-        )}
-
+        ) : <></>}
+        <ScrollComponent searchQuery={searchQuery}/>
         <Routes>
-          <Route path="/" element={<Movies movies={movies} viewTrailer={viewTrailer} closeCard={closeCard} />} />
+          <Route path="/" element={<Movies movies={movies} viewTrailer={viewTrailer} closeCard={closeCard} fetchStatus={fetchStatus}/>} />
           <Route path="/starred" element={<Starred viewTrailer={viewTrailer} />} />
           <Route path="/watch-later" element={<WatchLater viewTrailer={viewTrailer} />} />
           <Route path="*" element={<h1 className="not-found">Page Not Found</h1>} />
