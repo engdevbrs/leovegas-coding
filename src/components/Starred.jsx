@@ -4,7 +4,7 @@ import starredSlice from '../data/starredSlice'
 import Movie from './Movie'
 import '../styles/starred.scss'
 
-const Starred = ({viewTrailer}) => {
+const Starred = ({viewTrailer, searchMovies}) => {
 
     const state = useSelector((state) => state)
     const { starred } = state
@@ -13,9 +13,9 @@ const Starred = ({viewTrailer}) => {
 
   return (
     <div className="starred" data-testid="starred">
-      {starred.starredMovies.length > 0 && (<div data-testid="starred-movies" className="starred-movies">
+      {starred.starredMovies.length > 0 && (<div data-testid="starred-movies">
         <h6 className="header">Starred movies</h6>
-        <div className="row">
+        <div className="starred-movies">
         {starred.starredMovies.map((movie) => (
           <Movie 
             movie={movie} 
@@ -26,14 +26,14 @@ const Starred = ({viewTrailer}) => {
         </div>
 
         <footer className="text-center">
-          <button className="btn btn-primary" onClick={() => dispatch(clearAllStarred())}>Remove all starred</button>
+          <button data-testid="remove-starred-movies" className="btn btn-primary" onClick={() => dispatch(clearAllStarred())}>Remove all starred</button>
         </footer>
       </div>)}
 
       {starred.starredMovies.length === 0 && (<div className="text-center empty-cart">
         <i className="bi bi-star" />
         <p>There are no starred movies.</p>
-        <p>Go to <Link to='/'>Home</Link></p>
+        <p>Go to <Link to='/' onClick={() => searchMovies('')}>Home</Link></p>
       </div>)}
     </div>
   )

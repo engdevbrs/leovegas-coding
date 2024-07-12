@@ -1,16 +1,16 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import { Provider } from 'react-redux';
 import { renderWithProviders } from './utils';
+import Starred from '../components/Starred';
+import starredSlice from '../data/starredSlice';
 import { moviesMock } from './movies.mocks';
 import { configureStore } from '@reduxjs/toolkit';
 import userEvent from '@testing-library/user-event';
-import watchLaterSlice from '../data/watchLaterSlice';
-import WatchLater from '../components/WatchLater';
 
 
-const { remveAllWatchLater } = watchLaterSlice.actions
+const { clearAllStarred } = starredSlice.actions
 
 const searchMoviesMock = jest.fn();
 const viewTrailerMock = jest.fn();
@@ -45,12 +45,12 @@ describe('Starred Component', () => {
     store.dispatch = jest.fn();
 
     renderWithProviders(<Provider store={store}>
-      <WatchLater viewTrailer={viewTrailerMock} searchMovies={searchMoviesMock} />
+      <Starred viewTrailer={viewTrailerMock} searchMovies={searchMoviesMock} />
     </Provider>,
-      { initialState: watchLater }
+      { initialState: starred }
     );
 
-    expect(screen.getByText(/Watch Later List/i)).toBeInTheDocument();
+    expect(screen.getByText(/Starred movies/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Inception/i)[0]).toBeInTheDocument();
   });
 
@@ -73,18 +73,18 @@ describe('Starred Component', () => {
     store.dispatch = jest.fn();
 
     render(<Provider store={store}>
-      <WatchLater viewTrailer={viewTrailerMock} searchMovies={searchMoviesMock} />
+      <Starred viewTrailer={viewTrailerMock} searchMovies={searchMoviesMock} />
     </Provider>);
 
-    const removeWatchMoviesButton = screen.getByTestId('remove-watch-movies');
-    await userEvent.click(removeWatchMoviesButton)
+    const removeStarredMoviesButton = screen.getByTestId('remove-starred-movies');
+    await userEvent.click(removeStarredMoviesButton)
 
-    expect(store.dispatch).toHaveBeenCalledWith(remveAllWatchLater());
+    expect(store.dispatch).toHaveBeenCalledWith(clearAllStarred());
     });
 
     it('calls searchMovies and navigates to home',async () => {
       const searchMovies = jest.fn();
-      renderWithProviders(<WatchLater searchMovies={searchMovies}/>);
+      renderWithProviders(<Starred searchMovies={searchMovies}/>);
       const user = userEvent.setup()
       await user.click(screen.getAllByText(/Home/i)[0])
       
